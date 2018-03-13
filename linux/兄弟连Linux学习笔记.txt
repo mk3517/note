@@ -1,0 +1,671 @@
+01.1 发展历史和发行版本
+	Unix与Linux发展史
+		1965 Multics MIT GE AT&T
+		1969 肯。汤普森 Unix Unics
+			美苏冷战 开发tcp/ip协议 捆绑Unix
+		1971 同事丹尼斯。里奇 发明C语言
+			重新改写Unix
+	AIX操作系统是国内最普遍使用的Unix平台
+	Solaris是可以在个人PC上安装
+	BSD是另外的Unix分支
+		伯克利大学软件包
+		FreeBSD
+	Linux诞生于1991年
+		由芬兰大学Linus Torvalds开发，名为Linus' Unix，前身minix
+		芬兰设立 国际技术成就奖 100万欧元
+		企鹅为linux吉祥物，也是芬兰的吉祥物
+			也说明类似南极不属于任何国家
+		发行版本 vs 内核版本
+			内核网站 www.kernel.org
+				2.6.18 主版本.次版本.末版本
+					次版本为偶数是稳定版 奇数是开发板
+					主版本到3以后都是稳定版
+			下载内核版本后再开发产生发行版
+			内核一开始只有90k 现在有几十兆
+			发行版有2个系列，区别在于软件安装
+				redhat centos suse fedoro turbolinux ...
+				debian ubuntu knoppix
+				我们选择centos 社区维护
+				ubuntu桌面更漂亮 suse桌面也不错
+				redhat系列：红旗Linux
+				knoppix不用安装
+01.2 开源软件简介
+	对比商业软件
+	开源软件： nginx mysql php mongodb python ruby Apache（羽毛）
+		阿帕奇 市场占有率60%	nginx比阿帕奇更火	大写PHP就像大象
+	开源软件 != 免费
+		购买注释
+		约等于 自由软件 freeware
+		足够多的眼睛就能让问题浮现
+		安全等级 A B C D
+			windows服务器版 C
+			linux 打入安全补丁后能达到 B
+	软件通过维护来收费
+		开源软件开发的软件也应该是开源软件
+	支撑互联网的开源技术 LAMP
+		Linux Apache MySQL PHP
+01.3 Linux应用领域
+	基于Linux的企业服务器
+		扫描踩点 www.netcraft.com
+		通过分析数据包内容来判断你的服务器类型
+		download.microsoft.com也是使用Linux服务器
+	嵌入式应用
+		android平台，安装quickSSHd服务端软件就能用SecureCRT连接
+	电影娱乐业
+		SGI服务器换成Linux
+		泰坦尼克号 怪物史莱克 阿凡达 指环王 都是在Linux下渲染
+01.4 Linux学习方法
+	Windows易用优先 Linux服务器优先
+	Linux必须使用命令行
+	帮助 文档 示例 查找
+	忘掉Windows思维方式
+
+02.1 Linux系统安装 vmware虚拟机安装与使用
+	最大磁盘空间不占用磁盘空间，按实际大小分配
+	虚拟机内存不能超过真实机内存上限，界面最小内存628m
+	CD/DVD选项中已连接中打钩才能识别物理光驱
+	网络适配器：暂时不设置
+	*实际就设置了光盘路径
+	小技巧
+		创建虚拟机快照 点击转到
+		虚拟机--管理--克隆
+			克隆机占用资源小于原始机，但原始机删除后克隆机无法使用
+			完整克隆可以独立运行？
+02.2 系统分区
+	磁盘分区：
+		分区类型：主分区 扩展分区：最多只能有一个 主分区+扩展分区 最多为4个
+			扩展分区可以包含逻辑分区
+			扩展分区不能写入数据，逻辑分区和主分区可以正常写入数据
+	格式化（高级格式化）
+		Linux文件系统：EXT2 EXT3 EXT4(CentOS默认文件系统)
+		格式化就是写入文件系统
+		Ext4 默认分割大小4kb 10kb文件分为4+4+2
+			磁盘数据整理将文件零散的数据块(block)放在一起
+			i节点号 iNode号 表示文件 来对应使用的block块
+	硬件设备名称
+		IDE硬盘 /dev/hd[a-d]
+		SCSI/SATA/USB /dev/sd[a-p]
+		光驱 /dev/cdrom或/dev/sr0
+		打印机 /dev/lp[0-1] 或 dev/usb/lp[0-15]
+		鼠标 /dev/mouse
+	分区设备文件名
+		/dev/sda1 第一个sata硬盘第一个分区
+		虚拟机模拟硬盘也都是sda
+		逻辑分区是从sda5开始，即使不存在sda4
+	挂载（分配盘符）
+		必须分区
+			/ 根分区
+			swap分区 交换分区，内存2倍，不超过2GB
+				类似虚拟内存
+		推荐分区
+			/boot 启动分区，200MB
+				避免根分区写满后无法启动
+		文件系统结构
+			/	(/dev/sda3)
+				/boot 	(/dev/sda1)
+				/home	(/dev/sda2)
+	总结
+		分区->格式化->定义设备文件名->挂载
+02.3 Linux系统安装
+	按F2进入BIOS界面，设置启动顺序，光盘启动，安装好以后选到硬盘启动
+		虚拟机可以自动识别，不需要设置
+	Ctrl Alt Enter 全屏显示
+	Windows下局域网内不能使用相同主机名，否则无法相互访问
+	设置密码：
+		密码原则：复杂性 易记忆性 时效性
+			8字节以上 flzx_3QC 飞流直下三千尺
+		虚拟机用123456也可以
+	分区
+		/boot分区会自动升为sda1 200M
+		根分区最后分
+		交互分区swap在文件系统类型选 1G
+		/home 文件服务器默认上传位置 可以单独分区 2G
+		根分区使用全部空间
+	设置网卡选择开启
+		eno16777736 192.168.86.
+	安装软件内容
+		Desktop 个人用户推荐
+		Minimal Desktop
+		Minimal 服务器推荐
+		...
+		
+		注：最小安装很多命令都没有，选Basic Server包含基本命令
+		英文安装的请选择中文支持
+		
+		/sda1 /boot /sda2 /home /sda3 swap /sda5 /
+		root密码 123456
+		家目录 ~
+			/home/wsm /root
+		安装日志
+			/root/install.log 安装在系统中的软件包及其版本信息
+			/root/install.log.syslog 安装过程中的事件日志
+			/root/anaconda-ks.cfg 配置文件的个数记录和安装的设置信息，便于无人值守安装
+02.4 远程登录管理工具
+	虚拟机网络配置
+		桥接：虚拟机利用真实网卡与计算机进行通信
+			需要一个IP地址
+		NAT: 通过VMnet8		可以访问互联网
+		Host only：通过VMnet1		只能跟本机通信
+	简易配置网络地址
+		ifconfig
+			lo 本机回环网卡 127.0.0.1
+			ifconfig eth0 192.168.xxx.xxx
+				仅临时更改，重启后失效
+		编辑-虚拟网络编辑器 桥接到xxx
+	SecureCRT
+		有些系统不允许root运程登陆
+		df命令会有乱码
+		界面配置并避免乱码
+			Options-Session Option
+				Terminal-Emulation
+					Linux Ansi Color有颜色
+				Appearance
+					scheme-traditional
+					font-新宋体 字符集GB2312
+					Characher Set UTF-8
+	Winscp文件拷贝工具
+	vnc可以用图形界面远程管理linux（不推荐）
+03 给初学者建议
+03.1 注意事项
+	Linux严格区分大小写
+	所有内容都是以文件格式保存
+	Linux没有扩展名规定	
+		windows 文件名8.3规则
+		习惯性扩展名，并非强制
+			压缩包 .gz .bz2 .tar.bz2 .tgz
+			二进制软件包 .rpm
+			脚本 .sh
+			配置文件 .conf
+	所有存储设备都必须挂载后才能使用
+		图形界面中有自动挂载功能
+03.2 服务器管理和维护建议
+	各目录作用
+	/bin	存放系统命令的目录，普通用户和超级用户都可以执行
+	/sbin	保存和系统环境设置相关的命令，只有超级用户可以使用这些命令进行系统环境设置
+	/usr/bin 存放系统命令的目录，普通用户和超级用户都可以执行。这些命令和系统启动无关，单用户下不能执行
+		单用户类似windows的安全模式
+	/usr/sbin 只有超级用户可以执行
+	/boot	系统启动目录，保存系统启动相关文件，如内核文件和启动引导程序grub文件等。
+		记得备份
+	/dev	设备文件（黄色展示）
+	/etc	默认配置文件目录
+	/home	普通目录的家目录 /home/user1
+			/root/
+	/lib	函数库
+	/lost+found 系统崩溃或意外关机的碎片文件
+		fsck文件检查修复时会使用到
+	/media	挂载目录 媒体设备 CD-ROM等
+	/mnt	挂载目录 U盘或移动硬盘
+	/misc	挂载目录 NFS服务的共享目录
+	/opt	第三方安装软件的保存位置（已过时）
+		/usr/local/	主流的安装位置
+	/proc	虚拟文件系统，内存中。进程信息、硬件信息
+	/sys	虚拟文件系统，内存中。内核相关信息
+	/root	
+	/srv	服务数据目录。
+	/tmp	临时目录。可以清空
+	/usr	系统软件资源目录。
+		Unix Software Resource 
+	/var	动态数据保存位置。日志，缓存，软件运行时产生的文件（数据库）
+	服务器注意事项
+		远程服务器不允许关机，只能重启
+		重启时应该关闭服务
+		不要在访问高峰执行高负载命令
+			压缩 扫描 查找 备份
+		远程配置防火墙不要把自己踢出服务器
+			配置服务每5分钟清空防火墙配置，待防火墙配置测试成功后再关闭服务
+		指定合理密码并定期更新
+		合理分区权限
+		定期备份数据和日志
+			两地三备份
+04 Linux常用命令 文件处理命令
+04.1 命令格式与目录处理
+	命令格式 命令 [-选项] [参数]
+		-a = --all
+	ls = list
+		-a	所有文件，包括隐藏（以.开头）
+		-l	详细信息（long）
+			权限 引用计数 所属用户 所属组 文件大小（字节）修改时间 文件名
+			文件有访问时间 状态修改时间 数据修改时间
+			-rw-r--r--		rwx
+			第1位
+				-普通文件
+				d目录
+				l软链接
+			2~4	所有者权限 u
+			5~7 所属组权限 g
+			8~10 其它人权限 o
+			x 执行权限，只有脚本和程序才拥有
+		-d	查看目录，仅显示目录本身，不显示目录下文件
+		-h	人性化显示 K显示千字节
+		-i	查看inode号
+	目录处理命令
+		mkdir = make directory
+			直接创建文件 mkdir /tmp/xiaodianying
+				mkdir -p /tmp/Japan/boduo
+		cd = change directory
+		pwd = print working directory
+		rmdir = remove directory 删除空目录
+		cp = copy
+			-r 复制目录 -p 保留文件属性（包括修改时间）
+		mv = move 移动/更名
+			不需要-r选项，直接移动文件夹
+		rm = remove
+			-r 删除目录 -f 强行删除
+			数据恢复公司价格昂贵
+		
+		clear = Ctrl+L
+	文件处理命令
+		touch 创建空文件
+			touch "program files"
+		cat 查看文件内容
+			-n 显示行号
+			tac 反向列示
+		more 分页显示文件
+			空格 或 f 翻页
+			回车 换行
+			q	退出
+		less 可以向上翻页 pageup向上翻
+			/ 查找关键词
+				n 查找下一条
+		head 查看前几行（看脚本注释）
+		tail 查看最后几行（-f 看日志）
+			-n 行数 默认10行
+	链接命令
+		ln = link
+			-s [原文件] [目标文件]    软链接
+		文件类型 l 软链接文件 权限 rwx*3
+			软链接=快捷方式 权限依赖于原文件权限
+		硬链接 类似 cp -p 但会同步更新
+			原文件被删除后硬链接依然可以访问
+			ls -i 查看文件的i节点 硬链接文件的i节点与原文件相同
+			注：硬链接不能跨分区
+04.2 权限管理命令
+	chmod	修改权限
+		ugo 所有者、所属组、其它人
+		所有者 和 root 可以执行chmod
+		chmod [{ugoa}{+-=}{rwx}] 
+			-R 目录递归
+			chmod 764 file1.txt
+			chmod g+w file1.txt
+		目录的读写执行权限
+			r: 列出目录中的内容 ls
+			w: 可以创建删除文件/目录 
+				是否可以删除文件决定于所在目录的权限
+				区别于文件的写权限是指可以修改文件内容
+			x: 可以进入这个目录 cd
+			目录的rx权限基本同时存在
+	chown = change file ownership 修改所有者
+		chown user file.txt
+			只有root可以执行
+	chgrp = change file group 修改所属组
+	umask -S	显示默认权限
+		默认文件与目录权限 rw-r--r-- rwxr-xr-x
+		每个用户只能有一个缺省组，创建文件时默认属于缺省组
+		缺省创建的文件没有x权限
+		0022 特殊权限 权限掩码 777-022=755 rwxr-xr-x
+		umask 023 设置默认权限
+04.3 搜索命令
+	find 不建议在高负载时使用
+		everything软件 windows
+		find [搜索范围] [匹配条件]
+		-name 查找文件名
+			find /etc -name init 精确匹配 *init* 模糊匹配 ?匹配单个字符
+			-iname 不区分大小写
+		-size +2048 >2048*512字节1MB的文件 -n小于 n等于
+		-user root 查找所有者为root的文件
+		-group 属于所属组的文件
+		-amin 访问时间
+		-cmin 文件属性改变时间
+		-mmin 文件内容改变时间
+			-mmin -5 查找5分钟内被修改过内容的文件
+				+n 超过n分钟
+		-a and表示同时满足
+			find /etc -size +163840 -a -size -204800
+		-o or或者
+		-type 文件类型 f文件 d目录 l软链接
+		-exec/-ok {} \; 对搜索结果进行操作 注意有空格
+			find /etc -name inittab -exec ls -l {} \;
+			-ok 有确认操作
+		-inum 根据i节点查找
+			ls -i 查看i节点
+			用于操作文件名比较复杂的文件
+			用于查找硬链接文件
+	locate 快速查找 查找文件资料库内容
+		locate file1.txt
+		/var/lib/mlocate/mlocate.db 文件资料库
+		无法查找到新创建的文件
+		updatedb 更新文件资料库 后可以查找到新创建的文件
+			但依然找不到/tmp目录下的文件
+		-i 不区分大小写
+	which 查找命令
+		可以查看到别名 alias rm='rm -i'
+			-i 表示需要确认
+		whereis 同时列出帮助文档位置
+	grep 文件内容搜索
+		grep multiuser /etc/inittab
+		-i 不区分大小写 -v 排除指定字符串
+		grep -v ^# /etc/inittab 去除#开头的行
+04.4 帮助命令
+	man    manual 
+		不但可以查看命令帮助也能查看配置信息
+		搜索： /-a   n下一个
+		查看配置文件帮助：
+			直接 man services      不需要路径
+		man passwd      既有命令又有配置文件
+			man1 命令的帮助
+			man5 配置文件的帮助
+		man 5 passwd
+	whatis    只看命令帮助文档name部分
+		apropos   配置帮助文档的name部分
+	touch --help 查看命令选项
+	help 显示内置命令，例如cd umask if/while，没有命令路径
+04.5 用户管理命令
+	useradd    添加新用户
+		passwd yangmi
+			e--@ abcd 1234
+	who		查看登陆用户信息
+		一个用户可以多次登陆
+		tty	本地终端
+		pts 远程终端
+		登陆时间 主机地址
+		w命令
+			up 连续运行时间
+			1分钟 5分钟 15分钟 负载情况
+			JCPU 累计CPU占用时间
+			PCPU 当前命令占用CPU时间
+04.6 压缩解压命令
+	.zip linux与windows默认存在解压工具
+	.gz 格式
+	gzip boduo  压缩
+	gunzip boduo.gz
+		gzip 不能压缩目录且压缩后会删除原文件
+	tar		打包 并压缩
+		-c 打包
+		-v 显示详细信息
+		-f 指定文件名
+		-z 压缩
+		
+		tar -zcf Japan.tar.gz Japan(目录)
+		解包 -x
+		tar -zxf Japan.tar.gz 
+	zip
+		window下支持几乎所有linux的压缩包
+		-r 压缩目录
+		zip boduo.zip boduo
+	bzip2 -k 保留原文件
+		tar -jcf / jxf
+
+04.7 网络命令
+	write	给指定用户发送信息
+		ctrl+D 结束
+	wall    向所有用户发信息
+	ping -c 次数
+		packet loss 丢包率
+	ifconfig	interface configure
+		查看网卡信息
+			eth0 本地第一块网卡
+			lo 回环网卡 127.0.0.1
+		ifconfig eth0 192.168.1.125	配置网络地址
+	mail 	发送电子邮件
+		mail root
+			ctrl+D 结束
+		没有参数直接查看
+			输入序列号查看
+			h 查看列表
+			d 删除
+			q 退出
+		一般会收到系统信息，系统邮件建议及时查看
+	last	查看用户登录信息，以及重启信息
+	lastlog	查看最后登录的信息
+		-u 502	根据uid信息查看用户登录信息
+	traceroute 查看主机到网站的命令
+		traceroute www.baidu.com
+	netstat	查询网络状态
+		-t TCP协议
+		-u UDP协议
+		-l 监听
+		-r 路由
+		-n 显示ip地址和端口号
+		netstat -tlun    查看本机监听的端口
+		netstat -an		查看所有网络连接
+		netstat -rn 	查看路由表
+	setup	配置网络服务
+		只有redhat才有
+		service network restart
+		在centos7下没有对应功能
+	mount	挂载
+		mount [-t 文件系统] 设备文件名 挂载点
+		mount -t iso9660 /dev/sr0 /mnt/cdrom
+			使用虚拟机的右下角光盘图标
+			-t 参数可以省略
+		umount /dev/sr0	卸载
+			退出挂载点才能卸载
+04.8 关机重启命令
+	shutdown
+		-c 取消 -r 重启 -h 关机 
+		时间 now 
+		例： shutdown -h 8:30
+		能够正确在关机前保存服务数据
+		每半年可能出现一次由于关机导致硬盘损坏的情况也很正常
+	其它关机命令	halt	poweroff=直接断电	init 0
+	其它重启命令	reboot	init 6
+	系统运行级别 0：关机 1单用户(安全模式) 2 不完全多用户 3完全多用户 4 未分配 5 图形界面 6重启
+		NFS network file system 网络文件系统
+			网络文件共享（不安全）
+		cat /etc/inittab
+			5 - X11    window X 桌面系统
+		runlevel   查询运行级别
+			N 3		N：上一个运行级别
+	logout
+		退出登录
+05 文本编辑器Vim
+05.1 Vim常用命令
+	vim filename
+		i a o 进入插入模式
+		大写 表示行首 行尾 下一行
+		: 进入编辑模式
+			set number 显示行号 nonu 取消行号
+			:813 跳转到813行
+		x 删除字符
+		dd 删除行（剪切）
+		D  删除当前位置到行末
+		gg 到第一行
+		G  到最后一行
+		$  移动到行尾
+		yy 复制当前行
+		p	粘贴到行下面
+		r	替换一个字符
+		R	进入替换模式
+		u	撤销
+		搜索和替换
+			/+搜索内容 例如/ftp
+				n 下一个
+				:set ic  不区分大小写 noic 区分大小写
+			:%s/old/new/g		全文替换old为new
+			:n1,n2s/old/new/g   替换n1行到n2行的内容
+			......./c		替换前确认
+		保存退出
+			ZZ	保存退出
+			:wq! 可以强制保存所有者都没有写入权限的文件
+05.2 Vim使用技巧
+	:r 文件名 	导入:文本内容
+	:!命令 		直接执行命令
+		:r !date	直接写入时间
+	定义快捷键
+		:map Ctrl+v+p I#<ESC>
+			显示 :map ^P I#<ESC>
+			表示 使用Ctrl+P在行首插入#并返回命令模式
+		替换命令中^表示行首
+			:1,4s/^/#/g		在行首插入#
+			:1,4s/^#//g		去除行首#
+			:1,4s/^/\//g	在行首插入\
+				命令前加入\不使用命令的转义
+		:ab mymail mk3517@126.com	输入mymail时替换为 mk3517@126.com
+	vim配置文件（重启后有效）
+		~/.vim.rc
+			set nu		编辑模式命令
+06 软件包管理
+06.1 简介
+	软件包 源码包 二进制包（rpm）
+	安装软件后可以直接删除安装目录，不会有残留文件
+		源码包安装1G左右的操作系统需要3天左右时间
+06.2.1 rpm命令
+	命名规则
+		httpd-2.2.15-15.e16.centos.1.i686.rpm
+		软件包名-软件版本-发布次数-Linux平台-硬件平台.rpm
+			i686 i386 i486 i586 可以在任何机器上安装
+			x64只能在64位机器上安装
+			noarch 任何硬件平台
+			包名 = 软件包名(httpd)
+		rpm依赖性
+			树形依赖 a->b->c
+			环形依赖 a->b->c->a
+				用一条命令同时安装a b c
+			库依赖(模块依赖) .so结尾的依赖性
+			www.rpmfind.net
+	yum在线管理
+06.2.2 rpm命令管理
+	包全名： 操作没有安装的软件包时使用
+	报名： 操作已安装的包。路径： /var/lib/rpm/中的数据库
+	rpm -ivh 包全名
+		-i 安装
+		-v 显示详细信息
+		-h 显示进度信息
+		--nodeps 不检测依赖性
+		-U 升级
+		-e 卸载 只跟包名（不是全名）
+06.2.3 rpm命令管理-查询
+    rpm -q 包名	
+	rpm -qa | grep httpd
+		-qi 显示详细信息
+		-qip 包全名 查询未安装包信息
+		-ql 包名 查找包中文件安装位置（同样可以加p）
+		-qf 文件名 查询文件属于哪个包
+		-qRp 包全名 查询包的依赖包
+06.2.4 rpm命令管理-校验、文件提取
+	rpm -V 已安装的包名
+		S	文件大小改变
+		M	文件类型或权限改变
+		5	MD5码改变
+		D	?
+		L	文件路径改变
+		U	文件的所有者改变
+		G	文件的所属组改变
+		T	文件的修改时间改变
+		
+		c	配置文件
+		d	普通文件
+		g	鬼文件（不应存在的文件）
+	rpm2cpio 包全名 | cpio -idv .文件绝对路径  			表示拷贝到当前目录
+	cpio -idv < [文件]
+06.3.1 yum在线管理
+	网卡配置文件：
+		/etc/sysconfig/network-scripts/ifcfg-eth0
+			ONBOOT="yes"		#打开网卡
+	配置网络yum源
+		/etc/yum.repos.d/*.repo
+	配置文件.repo
+		[base]
+		mirrorlist  镜像地址
+		=baseurl	原地址
+		enabled		1生效（默认）
+06.3.2 yum在线管理 		
+	yum list  列出仓库中的软件包
+	yum search 包名（不是包全名）
+	yum -y install 包名 
+		-y 自动yes
+	yum -y update 包名（必须加，否则会导致全部升级，包括内核，内核升级后需要配置才能正常开机）
+	yum -y remove 包名（卸载时会卸载依赖包） 尽量不卸载
+	yum 软件包组管理
+	yum grouplist  在虚拟机中直接查询可以看到英文组名
+	yum groupinstall 组名   仅支持英文
+	yum groupremove 组名
+06.3.3 yum在线管理  光盘yum源搭建
+	步骤 
+		1.搭载光盘
+		2.配置/etc/yum.repos.d/
+			配置文件中不能出现不必要的空格（行首或行尾）
+06.4.1 源码包与RPM包的区别
+	RPM包默认安装位置
+		/etc/  配置文件
+		/usr/bin/ 执行文件
+		/usr/lib/ 函数库
+		/usr/share/doc/ 使用手册
+		/usr/share/man/ 帮助文件
+		/etc/rc.d/init.d/ 服务安装位置  
+			可用service启动
+			service httpd start
+	源码包 手工指定 /usr/local/软件名/
+		service命令无法找到手动指定的安装位置
+		需要使用绝对路径启动
+06.4.2 源码包管理
+	1.安装GCC
+	2.下载源码包
+	3.源码保存位置 /usr/local/src/
+	  软件包安装位置 /usr/local/
+	4.进入源码目录 
+		INSTALL 	安装说明
+		README		使用说明
+	5. ./configure	配置和检查
+		./configure --help
+		./configure --prefix=/usr/local/httpd/ 指定安装目录
+		会生成Makefile文件
+	6.make  make install
+	
+	源码包安装后直接删除目录就可以
+06.5 脚本安装包
+	Webmin图形管理界面
+		ctrl+退格 删除字符
+
+07 用户和用户组管理	
+07.1.1 用户配置文件
+	用户信息文件 /etc/passwd
+	影子文件	/etc/shadow
+	组密码文件	/etc/gshadow
+	Linux中主要通过用户配置文件来查看和修改用户信息
+	
+	用户信息文件 /etc/passwd
+	用户名:密码标识(x表示在shadow中):UID:GID:用户说明（可以为空）:家目录:登录之后的Shell
+	UID: 0 超级用户  1-499:: 系统用户（伪用户）   500-65535:  普通用户
+		将普通用户UID改为0就成为超级用户
+		伪用户删除后会导致系统崩溃，也不能用于登录
+	GID: 初始组ID 唯一，不建议修改 /etc/group 文件中保存
+		cf 附加组：用户可以加入多个附加组，获取附加组权限
+	家目录:
+		普通用户: /home/用户名/
+		超级用户: /root/
+	Shell: 命令解释器
+		标准Shell /bin/bash
+		还有 /sbin/nologin 禁止登陆用户 等
+07.1.2 影子文件
+	/etc/shadow
+		权限为000  只有root用户可以访问
+		用户名:密码:修改日期:两次密码的修改间隔:密码有效期（天）:到期警告时间:宽限天数(-1不会失效):账号失效时间:
+		密码 SHA512加密,* !!没有密码不能登录
+		日期： 1970.1.1为标准时间 每天加1
+			date -d "1970-01-01 160066 days"
+			echo $(($(date --date="2014/01/06" +%s)/86400+1))  日期换算为时间值
+		修改间隔: 间隔期内无法修改密码
+07.1.3 组信息文件及组密码文件
+	/etc/group
+		组名:密码标识:GID:附加用户
+		组密码：一般不用，知道组密码的组管理员用户可以修改用户组
+07.2 用户和用户组管理
+    家目录 /home/用户名/	/root/
+	修改普通用户的UID为0后，用户成为超级用户，但家目录不会改变
+	用户邮箱，每个用户都有
+		/var/spool/mail/用户名/
+	
+		
+
+end
+
+
+
+
+
+
+
+
+
