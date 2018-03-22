@@ -656,9 +656,46 @@
 	修改普通用户的UID为0后，用户成为超级用户，但家目录不会改变
 	用户邮箱，每个用户都有
 		/var/spool/mail/用户名/
-	
-		
-
+07.3.1 用户和用户组管理-用户管理命令 useradd
+	useradd	添加用户
+		useradd -G group1 user1
+		passwd user1
+			***
+		-c 用户说明
+		-g 组名 必须已经存在的组
+		-g 附加组 group1,group2
+		-s shell 默认/bin/bash
+	/etc/default/useradd	默认配置文件
+		SKEL 模板文件
+	/etc/login.defs	默认配置文件
+		PASS_MIN_LEN	无效，现在在PAM中
+07.3.2 用户和用户组管理-用户管理命令 passwd
+	只有root可以修改其它用户密码
+	passwd
+		-S 查询密码状态(root权限)
+		-l 锁定用户 passwd -l user1
+		-u 解锁用户
+		--stdin  管道
+			echo "123"|passwd --stdin lamp
+07.3.3 用户和用户组管理-用户管理命令 usermod
+	usermod参数与useradd相同 -L 锁定 -U 解锁
+	chage 修改密码状态
+		-l 列出密码状态
+		-d 修改密码修改时间
+			chage -d 0 user1
+			用户第一次登录后会提示重置密码
+07.3.4 用户和用户组管理-用户管理命令 userdel
+	userdel -r user1  删除用户和家目录
+	用户切换命令su
+		su root
+			切换用户后环境变量并未改变
+		su - root	（推荐）
+			切换用户同时改变环境变量
+		su - root -c "useradd user3"
+			-c 仅使用一次，不切换用户
+			
+			
+			
 end
 
 
