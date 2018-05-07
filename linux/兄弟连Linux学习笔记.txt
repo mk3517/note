@@ -711,7 +711,7 @@
 	ACL简介：文件对多个组有不同权限，解决身份不足的问题
 		模式与windows相同
 	查看分区ACL权限是否开启
-		dump2fs -h /dev/sda3
+		dumpe2fs -h /dev/sda3
 			Default mount options:		... acl		默认都支持
 	开启ACL（默认都开启）
 		mount -o remount,acl /
@@ -734,10 +734,888 @@
 			-d	设定默认权限
 			-k	删除默认权限
 			-R	递归设定权限
-			
+8.1.3 ACL权限-最大有效权限与删除ACL权限
+	mask权限，用户权限与mask进行与
+		setfacl -m m:rx ./project
+			查看后面的#effective
+	删除权限
+		setfacl -x u:st ./project
+			删除st用户的ACL权限
+		setfacl -b ./project
+			删除全部ACL权限
+8.1.4 默认ACL权限与递归ACL权限
+	递归是指父目录在设定ACL权限是，所有子文件和目录也会拥有相同的ACL权限
+		setfacl -m u:用户名:权限 -R 目录    注意顺序
+		执行之后添加的文件无法获取ACL权限
+	默认ACL权限
+		如果目录设定了默认ACL权限，子文件都会获得ACL权限
+		setfacl -m d:u:用户名:权限 目录
+8.2.1 权限管理-文件特殊权限-SetUID
+	拥有SUID的程序执行时，该程序拥有文件所有者的身份
+		ll /usr/bin/passwd
+			-rwsr-xr-x     其中的s说明SUID
+				在passwd运行时可以拥有root权限，修改/etc/shadow文件
+	设定SUID
+		chmod 4755 文件	(4表示SUID)（2表示SGID）(1表示SBIT)
+		chmod u+s 文件
+		chmod 755 文件/chmod u-s 文件    删除SUID
+8.2.2 权限管理-文件特殊权限-SetGID
+	拥有SGID的程序执行时，该程序拥有文件所属组的身份
+		ll /usr/bin/locate
+			-rwx--s--x 1 root slocate
+			ll /var/lib/mlocate/mlocate.db
+			-rw-r----- 1 root slocate
+			由于有SGID权限，普通用户使用locate命令时可以访问mlocate.db文件
+	普通用户在拥有SGID的目录中创建文件时，该文件的所属组为目录的所属组
+		没啥用
+	设置SGID
+		chmod 2755 文件
+		chmod g+s 文件
+		chmod g-s 文件
+8.2.3 权限管理-文件特殊权限-Sticky BIT
+	SBIT粘着位 只对目录有效
+		目录拥有粘着位时，普通用户无法删除其它用户建立的文件
+	ll -d /tmp/
+		drwxrwxrwt
+	设置SBIT
+		chmod 1755 目录
+		chmod o+t 目录
+		chmod o-t 目录
 		
-			
-			
+8.3 权限管理-文件系统属性chattr权限
+	chattr [+-=] [选项] 文件
+		对root用户也生效
+		i: 只读（不能删除、改名、改内容）
+			对目录 不能新建或删除目录下文件
+		a: 只能增加文件内容（无法用vim保存）
+			对目录 只能增加文件
+	lsattr 选项 文件		查看chattr权限
+		-a 显示所有文件和目录
+		-d 对目录仅列出本身属性
+8.4 权限管理-文件特殊权限-sudo权限
+	root将系统命令赋予普通用户执行
+	visudo
+		打开的是/etc/sudoers文件
+		root ALL=(ALL) ALL
+		man 5 sudoers
+			看帮助文件
+		ALL= 定义执行的本地的IP
+		(ALL) 执行身份，默认ALL
+		ALL 授权的命令名：
+		%group1 ALL=(ALL) /sbin/shutdown -r now
+			group1组 可以执行 。。。。。。
+			命令必须写绝对路径
+	sudo -l
+		查看可以执行的sudo命令
+9 文件系统管理
+9.1 回顾分区和文件系统
+	见2.2
+	ext2 支持16GB
+	ext3 支持16TB
+	ext4 支持1EB 支持16TB文件
+9.2.1 文件系统常用命令
+	df [选项] [挂载点]  显示磁盘状态
+		-a 显示隐藏分区
+		-h 人性化单位显示
+	du [选项] 目录 看目录的大小
+		-h 人性化单位显示
+		-s 只显示总量
+		du 统计结果可能比df显示的占用空间小，由于df还有其他浪费的空间
+			长期不重启，占用磁盘空间会变大
+	fsck [选项] 设备文件名   文件系统修复，不建议手工使用
+	dumpe2fs 设备文件名		仅支持ext文件系统 不支持xfs文件系统
+		dumpe2fs /dev/sda1
+9.2.2 挂载命令
+	mount [选项]
+		-l 显示已挂载的命令，默认
+		-a 按/ect/fstab的内容，自动挂载
+			光驱、移动硬盘不要写入自动挂载
+		-t 文件系统
+			fat32 -> vfat
+		-L 卷标
+		-o 特殊选项
+			remount 重新加载（使特殊选项生效）
+			noexec 分区下程序不能执行
+			exec 	支持程序执行（默认）
+				mount -o remount,noexec /home/
+		mount [-t 文件系统] [-L 卷标] [-o 特殊选项] 设备文件 挂载点
+9.2.3 挂载光驱与U盘
+	linux建议 mnt下挂光盘 media下挂U盘
+	挂载光盘
+		创建挂载点 mkdir /mnt/cdrom/
+		光盘放入光驱
+			在VM虚拟机上双击光盘图标
+		挂载
+			mount /dev/sr0 /mnt/cdrom/
+				ll /dev/cdrom
+		卸载后才能弹出光盘
+			umount 设备文件或挂载点
+			umount /mnt/cdrom
+	挂载U盘
+		插入U盘
+			在VM虚拟机上点一下后插入U盘
+		查看设备文件名
+			fdisk -l
+				linux默认不支持ntfs
+		挂载
+			mount -t vfat /dev/sdb1 /mnt/usb
+		卸载后才能拔下U盘
+9.2.4 支持NTFS文件系统
+	需要安装驱动
+		编译内核
+		使用第三方软件
+	使用https://tuxera.com/opensource/ntfs-3g_ntfsprogs-2017.3.23.tgz
+		解压
+		./configure
+		make
+		make install		
+	mount -t ntfs-3g 设备文件 挂载点
+		只能读取，不能写入
+9.3.1 fdisk分区
+	fdisk /dev/sdb
+		d 删除分区
+		l 显示分区类型
+		m 帮助
+		n 新建分区
+		w 保存退出
+		q 取消
+		ctrl+backspace 才能删除
+	新建分区
+		n 新建分区
+		p 主分区
+		分区号 1
+		起始柱面 1
+		终止柱面 +2G
+	创建扩展分区
+		e 扩展分区
+	创建逻辑分区
+		l 逻辑分区
+	partprobe 重载分区表
+	格式化分区
+		mkfs -t ext4 /dev/sdb1
+9.3.2 自动挂载与fstab文件修复
+	写入/etc/fstab文件
+		第一个字段 设备文件名或UUID
+			/dev/sda1或UUID=…… UUID可以避免磁盘顺序变换后无法挂载
+			blkid 查看UUID
+		第二个字段 挂载点
+		第三个字段 默认文件系统
+		第四个字段 特殊权限(mount -o )
+		第五个字段 是否dump备份 0：不备份 1：每天备份 2：不定期备份
+		第六个字段 是否自动使用fsck检查 0：不检查 1比2优先级高，先扫描小的，建议2或更高
+	mount -a 检查一下
+	fstab文件修复
+		写错后重启无法修改/dev/fstab文件
+		使用mount -o remount,rw /
+10 Shell基础
+10.1 Shell概述
+	外层应用->Shell命令解释器->内核->硬件
+	Shell分类
+		Bourne Shell:sh,ksh,Bash
+			Bash:与sh兼容，Linux主流Shell
+		C Shell:BSD版UNIX中使用，类似C语言
+	/etc/shells
+		支持的Shell类型
+		输入sh后可切换为sh Shell界面，exit退出
+		nologin一般是伪用户的Shell
+			vim /etc/passwd
+10.2 脚本执行方式
+	echo [选项] [输出内容]
+		-e 支持反斜线字符转换
+			echo -e "ab\bc"  \b退格，输出ac
+			echo -e "\e[1;31mabcd\e[0m"
+				\e[1; 开始颜色输出 \e[0m 结束颜色输出
+				31m 红色 30m 黑色 32m 绿色 
+				33m 黄色 34m 蓝色 37m 白色
+	脚本hello.sh：
+		#!/bin/Bash
+		#The first program
+		echo -e "hello world"
+	直接运行
+		chmod 755 hello.sh
+		./hello.sh
+	调用Bash执行
+		Bash hello.sh
+	cat -A hello.sh
+		回车显示为$
+		Dos回车显示为^M$
+		dos2unix hello.sh
+10.3 Bash的基本功能
+10.3.1 历史命令与补全
+	历史命令
+		history  查看历史命令
+			-c 清除 -w 强制保存
+			保存在 ~/.bash_history
+			默认保存1000条
+			/ect/profile中HISTSIZE定义
+		使用上下箭头调用
+		!n 重复执行第n条命令
+		!字符串 重复执行以字符串开头的命令
+	补全 Tab
+10.3.2 命令别名与常用快捷键
+	alias 别名=“原命令”
+		直接alias查看别名
+	unalias 别名  取消别名
+	命令顺序 
+		第一 绝对路径
+		第二 别名
+		第三 内部命令，找不到执行文件， whereis cd
+		第三 PATH环境变量中的外部命令
+	让别名永久有效
+		/root/.bashrc   家目录下.bashrc
+	快捷键
+		ctrl+A 行首
+		ctrl+E 行尾
+		ctrl+C 强制终止
+		ctrl+L 清屏
+		ctrl+U 剪切光标之前的所有字符
+		ctrl+K 剪切光标之后的所有字符
+		ctrl+Y 粘贴
+		ctrl+R 历史命令搜索
+		ctrl+D 退出终端=logout
+		ctrl+Z 暂停进程
+10.3.3 输入输出重定向
+	标准输入输出
+		键盘 /dev/stdin 0（文件描述符） 标准输入
+		显示器 /dev/stdout 1	标准输出
+		显示器 /dev/stderr 2	标准错误输出
+	输出重定向
+		命令 >文件   覆盖
+		命令 >>文件	追加
+		错误输出重定向
+			命令 2>文件   命令 2>>文件
+	同时输出重定向到
+		命令 >文件 2>&1
+		命令 &>文件
+		命令 >>文件a 2>>文件b
+	输出到空
+		命令 &>/dev/null
+	输入重定向
+		命令<文件
+		wc [选项][文件名]		统计命令
+			-c	统计字节数
+			-w	单词数
+			-l	行数
+		wc<abc
+10.3.4 多命令执行与管道符
+	命令1;命令2   	没有联系
+	命令1&&命令2  	命令1正确后执行命令2
+	命令1||命令2	命令1不正确执行命令2
+	data;dd if=/dev/zero of=/root/testfile bs=1k count=100;date
+	管道符
+		命令1|命令2		命令1正确的输出作为命令2的输入
+			ll -a /etc/ | more
+			netstat -an | grep ":22"
+10.3.5 通配符与其他特殊符号
+	?,*,[abc],[a-z],[^1-9]
+	Bash中的特殊符号
+		''	单引号中内容特殊符号均没有含义，例如$ `
+		“”	双引号中特殊符号有意义
+		``	反应号的内容是系统命令，例如 abc=`date`
+			$()作用一样		echo $(ls)
+		#	注释
+		$	调用变量值
+		\	转义符，\“ 就是"
+10.4 Bash变量
+10.4.1 用户自定义变量
+	变量默认类型都为字符串型，数值必须指定为数值型
+	变量的值有空格时需要用单双引号包含
+	变量可以叠加 变量用"$变量名"或${变量名}
+	命令用 $(命令) 表示
+	变量分类
+		用户自定义变量（本地变量）
+		环境变量
+		位置参数变量
+			用于脚本传递参数
+			变量名和作用是固定的
+		预定义变量
+	设置变量
+		变量名=变量值
+	set		查看所有变量
+	unset	删除变量
+10.4.2 环境变量
+	用户自定义变量只在当前的Shell中有效
+	在所有当前Shell的子Shell中也生效，
+		输入bash进入子Shell
+		pstree查看进程树
+	配置文件中的环境变量在所有Shell生效
+	设置环境变量
+		exprot 变量名=变量值
+		exprot 变量名	将本地变量声明为环境变量
+	查询环境变量
+		env
+	unset	删除变量
+	常用环境变量
+		PATH	用冒号分割的系统路径
+			PATH="$PATH":自己的路径
+		PS1(只能用set看到) 	提示符变量
+			'[\u@\h \W]\$ '
+10.4.3 位置变量
+	命名
+		$n	0代表命令本身 1~9代表参数 ${10}
+			sum=$(($1+$2)) 求和
+		$# 参数个数
+		$* 所有参数输出
+		$@ 产生参数数组
+			数组可以用for循环拆开
+				for x in "$@"
+10.4.4 预定义变量
+	命名
+		$?	上一个命令的返回值
+			0：正确 其它：报错值
+		$$	当前PID
+		$!	后台执行的最后一个PID
+	接收键盘输入
+		read [选项][变量名]		按回车结束输入
+			-p "提示信息"
+			-t 秒数
+			-n 字符数
+			-s 			隐藏输入
+			read -t 30 -p "Please input your name:" name
+			echo "Name is $name"
+10.5.1 数值运算与运算符
+	declare [+/-][选项] 变量名
+		-	设定类型属性
+		+	取消类型属性
+		-i	声明为整数型
+		-x	声明为环境变量，与export相同
+		-p	显示变量类型
+		declare -i cc=$aa+$bb		cc=aa+bb
+	使用expr
+		dd=$(expr $aa + $bb)
+	使用$((表达式))或$[表达式]
+		ff=$(($aa+$bb))
+10.5.2 变量测试与内容变换
+	x=$(y:-默认值)  y未设置或为空时x=默认值，否则x=y
+	x=$(y:=默认值)
+	x=$(y:?错误输出)	y未设置或为空时错误输出，否则x=y
+			没有:时 y可以为空值
+10.6 环境变量配置文件
+10.6.1 简介
+	source 配置文件 （= . 配置文件）
+		让配置文件直接生效
+	环境变量：PATH PS1 HISTSIZE HOSTNAME等
+	对所以用户生效的配置文件
+		/etc/profie
+		/etc/profile.d/*.sh
+		/etc/bashrc
+	仅对当前用户生效
+		~/.bash_profile
+		~/.bashrc
+10.6.2 作用
+	执行顺序
+	/etc/profile
+		/etc/profile/*.sh
+	~/.bash_profile
+	~/.bashrc
+	/ect/bashrc		<- no login入口
+		/etc/profile/*.sh
+	作用
+		/etc/profile
+			登录用户信息 USER LOGNAME MAIL PATH HOSTNAME umask
+			调用/etc/profile.d/*.sh (lang.sh->i18n 语言设置)
+		~/.bash_profile
+			调用~/.bashrc
+			追加~/bin到PATH环境变量
+			export PATH
+		~/.bashrc
+			定义别名
+		/etc/bashrc
+			定义PS1 登录提示符
+			当no login用户调用
+				/etc/profile/*.sh
+10.6.3 其他配置文件和登录信息
+	~/.bash_logout		注销时调用
+	~/.bash_history		历史命令
+	/etc/issue			登录信息（本地用户）
+		欢迎信息（建议写入警告信息）
+		\l		登录终端
+	/etc/issue.net 远程登录
+		没有转义符
+		启用
+		/etc/ssh/sshd_config
+			Banner /etc/issue.net
+	/etc/motd	登录后信息
+11 Shell编程
+11.1 基础正则表达式
+	grep awk sed等命令支持正则表达式
+	一般命令（ls find cp）仅支持 通配符
+		用来匹配文件名
+		* ? []
+	正则用来匹配复杂字符串
+		grep 提取包含的一行
+		*	前一个的0次或n次
+		.	换行符以外的一个字符
+		^	行首	
+		$	行尾	^$表示空白行
+		[] [^]	^取反
+		\	转义符
+		{n,m}	在bash中使用\{n,m\}
+			出现n-m次，m可省略
+		
+		() + ? linux中没有
+11.2 字符截取命令
+11.2.1 cut命令
+	字段提取命令
+	cut [选项] 文件名
+		-f 列号,行号 -f 2 提取第二列 或 -f 2,3 提取第二列第三行
+		-d 分隔符，默认\t
+	缺陷：不能识别多个空格，使用awk命令解决
+11.2.2 printf命令
+	printf '输出格式' 输出内容
+		%s	字符串	
+		%i	整数	
+		%m.nf	浮点数
+	printf不支持管道符，可以用一下方式打开文件
+		printf '%s' $(cat student.txt)
+			一行作为一个输入
+	awk中的print 在输出后的每行加上换行符
+11.2.3 awk命令
+	覆盖cut功能，并支持编程
+	awk '条件1{动作1} 条件2{动作2}...' 文件名
+	条件（Pattern）: 例如x>5
+	动作: printf 流程控制
+	例1：df -h | awk '{print $1 "\t" $5}'
+	例2: df -h | grep sda1 | awk '{print $5}' | cut -d "%" -f 1
+	BEGIN 命令	最先执行
+		df -h | awk 'BEGIN{print "test !!"} {print $1 "\t" $5}'
+	FS 内置变量 注意要加BEGIN
+		cat /etc/passwd | grep "/bin/bash" | awk 'BEGIN{FS=":"} {print $1 "\t" $3}'
+	END 命令	在最后执行
+	条件 命令
+		awk 'BEGIN{FS=":"} $7=="/bin/bash"{print $1 "\t" $3}' /etc/passwd 
+11.2.4 sed命令
+	轻量级流编辑器
+	可以通过管道符直接修改命令的结果
+	sed [选项] '[动作]' 文件名
+		-n  仅输出修改项
+		-e  多条sed命令，用分号隔开
+			sed -e '2s/dev/dec/g;3i abc' df.txt 
+				注：测试中 i命令不可以在前面
+		-i	修改原文件
+		动作
+			p  输出指定行
+				sed -n '2p' student.txt
+			d  删除指定行
+				sed '2,4d'	student.txt
+			i  指定行前插入，\表示换行
+				sed '2i abc' student.txt
+			a  指定行后插入
+				sed '2a ab\
+				c' student.txt
+			c	替换对应行
+			s	替换字符串,'行号s/旧字符串/新字符串/g'
+				sed '1s/dev/dec/g' student.txt
+11.3 字符处理命令
+	sort 排序
+		按行排序
+		sort [选项] 文件名
+			-f 忽略大小写
+			-n 以数值进行排序
+			-r 降序
+			-t 指定分隔符，默认\t
+			-k n[,m] 指定范围，与-t配合使用，指定第几个字段
+				sort -t ":" -k 3,3 /etc/passwd
+	wc 统计
+		wc [选项] 文件名
+			-l	行 -w	单词数	-m  字符数
+			wc /etc/passwd
+			df -h|wc -l
+11.4 条件判断
+	测试条件
+	-d 文件名	是否是目录
+	-e 文件名	是否存在
+	-f 文件名	是否是普通文件
+	-r 文件名	拥有读权限，只要有一个有权限
+	-w 文件名	拥有写权限
+	-x 文件名	拥有执行权限
+	整数1 -eq 整数2	判断两个整数是否相等
+		ne gt lt ge le
+	-z 字符串	是否为空
+	-n 字符串	不为空
+	字符串1 == 字符串2 
+		!=
+	文件1 -nt 文件2  文件1比文件2新
+	文件1 -ot 文件2  文件1比文件2旧
+	文件1 -et 文件2  文件1和文件2 INode是否一致（硬链接）
+	判断1 -a 判断2 与
+		-o 或 
+	! 判断	取反
+	命令
+	test -e /root/install.log
+		[ -e /root/install.log ]  注意：[后必须要空格
+	echo $?
+		0 表示正确
+	[ -d /root ] && echo "yes" || echo "no"
+11.5 流程控制语句
+11.5.1 if语句
+	单分支
+	if [ 判断 ];then
+		程序
+	fi
+	或
+	if [ 判断 ]
+		then
+			程序
+	fi
+	双分支
+	if [ 判断 ];then
+		程序
+	else
+		程序
+	fi
+	多分支
+	if [ 判断 ];then
+		程序
+	elif [ 判断 ];then
+		程序
+	else
+		程序
+	fi
+	命令
+	date +%Y%m%d
+	nmap -sT 192.168.1.156  扫描目标主机
+		需要安装
+11.5.2 case语句
+	case $变量 in
+		"值1")
+			程序
+			;;
+		"值2")
+			程序
+			;;
+		*)
+			程序
+	esac
+11.5.3 for循环
+	for 变量 in 值1 值2 ...
+		do
+			程序
+		done
+	例
+	for i in $(df -h)
+		do
+			echo $i
+		done
+		空格分开多个变量
+	次数循环
+	for (( 初始条件;判断;赋值 ))
+	例
+	s=0
+	for (( i=0;i<3;i=i+1 ))
+		do
+			echo s=$(( $s+$i ))
+		done
+	echo $s
+11.5.4 while与until
+	while [判断]
+		do
+			程序
+		done
+	until 与while相反
+12 Linux服务管理
+12.1 服务简介与分类
+	RPM包默认安装的服务
+		独立的服务
+		基于xinetd服务
+			通过xinetd服务调用
+			例如：rsync 网络备份服务
+	源码包安装的服务
+	启动与自启动
+		类似windows的服务
+		状态：启动 停止 暂停 恢复
+		启动类型：自动 手动 禁止
+	查询已安装的服务
+		RPM包安装的服务
+			chkconfig --list
+			0-6 系统启动类型
+			启用：自启动
+		源码包安装的服务
+			查看安装位置	
+			RPM包安装在默认位置中
+				/etc/ /etc/rc.d/init.d/ ...
+				执行severic ... start时 检查/etc/rc.d/init.d/下的启动脚本
+			而源码包一般在/usr/local/下
+			不推荐把源码包配置为RPM包安装的服务
+12.2 RPM服务的管理
+12.2.1 独立服务管理
+	RPM包安装的默认位置
+		/etc/init.d/	启动脚本位置
+			=/etc/rc.d/init.d/	软连接
+		/et/xinetd.d	xinetd服务的启动脚本
+		/etc/sysconfig/	初始化环境配置文件
+		/etc/			配置文件位置
+		/etc/xinetd.conf xinetd配置文件
+		/var/lib/		服务产生的数据
+			例：/var/lib/mysql/
+		/var/log/		日志
+		特殊位置
+			例：httpd /var/www/html/ 保存网页
+	启动方法
+		/etc/init.d/独立服务名 start|stop|status|restart
+		= service 独立服务名 start|stop|status|restart
+			RedHat版Linux专用命令
+			service --status--all  列出所有服务状态
+	自启动方法
+		chkconfig --level 2345 httpd on
+			2345 启动类型，默认可省略(推荐)
+				chkconfig httpd off
+		修改/etc/rc.d/rc.local
+			=/etc/rc.local
+			该脚本在启动程序完成之后，会执行这个脚本
+			注： /var/lock/subsys/local	文件修改时间就是系统启动时间
+		ntsysv
+			图形界面 在启动的服务前输入*
+12.2.2 基于xinetd服务的管理		很少，不推荐使用
+	安装xinetd与telnet
+		yum -y install xinetd
+		yum -y install telnet-server	安装telnet服务端
+	配置 /etc/xinetd.d/telnet		CentOS7 不支持
+		disable = no		启动
+		chkconfig telnet on			自启动并启动
+12.3 源码包服务的管理
+	查看源码包的安装说明
+		例： apache: /usr/local/apache2/bin/apachectl start|stop
+	自启动
+		将源码包的启动命令加入 /etc/rc.d/rc.local
+	使用service命令管理
+		将启动脚本软链接到/etc/init.d/下
+			ln -s /usr/local/apache2/bin/apachectl /etc/init.d/apache
+	chkconfig命令与ntsysv命令都能识别
+		在以上启动脚本中加入
+			#chkconfig: 35 86 76		运行级别 启动顺序 关闭顺序
+			#description: source package apache
+				注：这两句都必须有。第一句的序号不能与其它服务重复，可以取大一点的值
+		chkconfig --add apache
+			--del 去除
+13 进程管理
+13.1.1 进程查看
+	作用：查看服务器状态，查看所有进程，杀死进程
+	ps     查看进程
+		ps aux = ps -le 查看所有进程
+			a 前台 x 后台 u 当前
+			l 详细信息 -e 所有进程
+			USER PID %CPU %MEM 
+			VSZ 虚拟内存 RSS 实际内存KB
+			TTY 登录终端 ?表示系统自己生成的
+				tty1-7 本地终端 pts/0-255 远程终端
+			STAT 进程状态 R/S睡眠/T停止/s包含子进程/+后台
+			START 启动时间 TIME 占用CPU时间 COMMAND 启动命令
+	top		查看健康状态
+		默认3秒更新一次
+		以CPU占用率排序
+		第一行：
+			当前时间 运行时间 登录用户数 1分钟5分钟15分钟平均负债（单核为1）
+		第二行
+			进程总数 运行 睡眠 停止 僵尸进程（正在终止）
+		第三行：
+			用户占用 系统占用 改变过优先级的用户占用 空闲比 
+			等待输入输出占用率 硬中断百分比 软中断百分比 
+			虚拟时间百分比：虚拟机等待实际CPU的时间百分比
+		第四行：内存
+			总共 已使用 空闲 用于缓冲
+		第五行：交换区
+			同上
+		
+		交互(注意大小写)
+			P:按CPU排序 M：按内存排序 N：PID排序 q：退出
+	pstree		查看进程树
+		-p	显示PID
+		-u	显示所属用户
+13.1.2 进程终止
+	kill 命令
+		-l 查看支持的信号
+			1 SIGHUP 重启进程 restart命令
+			9 SIGKILL 强制终止
+			15 SIGTERM 正常终止 默认
+		例: kill -1 PID
+	killall 进程名
+		例 killall -9 httpd
+		-i 交互式
+		-I 忽略大小写
+	pkill = killall
+		-t 按终端号踢出用户
+		例 pkill -t -9 pts/1
+			w 查询登录用户
+13.2 工作管理
+	把程序放入后台运行
+		加&符
+		按ctrl+z(暂停)
+	查看后台工作
+		jobs -l  显示pid
+			+是最后一个（默认工作号） -是倒数第二个
+	恢复到前台运行： 	fg %工作号 
+	恢复到后台： 		bg %工作号
+		注：有些命令比如top无法在后台运行，无法在后台运行
+13.3 系统资源查看
+	vmstat [刷新时间 刷新次数]
+		vmstat 1 3   监听3次，每次1秒
+			进程 内存 交换分区 IO 系统资源 cpu
+	dmesg  开机时内核检测信息(启动信息)
+		dmesg|grep CPU
+	free 	查看内存使用状态
+		-b 字节单位显示
+			-k -m -g
+		缓存cache是加速磁盘读取的
+			先读到cache，下次读取时从cache读取
+		缓冲buffer是加速磁盘写入的
+	cat /proc/cpuinfo	查看CPU信息
+		是内存文件，每次开机检测
+	uptime 	显示平均负债， 相当于top的第一行
+	uname
+		-a 查看内核所有信息
+		-r 内核版本
+		-s 内核名字，显示 Linux
+	file /bin/ls 	判断系统位数
+		查看命令文件类型
+	lsb_release -a   查看系统发行版本
+		CentOS release 7.0 需要安装这个命令
+			yum install -y redhat-lsb
+	lsof [选项] 列出进程调用的文件
+		-c 字符串  查看字符串开头的进程占用的文件
+		-p PID     查看PID......
+13.4 系统定时任务
+	service crond start    定时任务启动（默认自启动）
+	crontab -e 编辑  -l 查询   -r 全部删除
+		格式：
+			分钟 小时（0-23） 天 月 星期几（0=7星期日） 命令
+			*表示任意时间
+				45 22 * * * 命令   在22点45分执行命令
+			, 多个时间
+				10,20 22 * * * 命令 在22点10分，22点20分都执行命令
+			- 连续多个
+			*/n 每隔n周期
+				*/10 4 * * * 命令   凌晨4点每10分钟执行一次
+			同时出现 日和星期 是并列的
+			* * * * * 命令 		每分钟执行
+		注： 定时任务中的%必须加转义符\%包括脚本中
+14 日志管理
+14.1 简介
+	CentOS6.3后用rsyslog取代syslog
+		基于TCP
+		后台数据库
+		有日志消息的及时分析框架
+		配置中可以写简单的逻辑
+	日志服务(默认自启动)
+		ps aux|grep rsyslog
+	常见日志
+		/var/log/cron		定时任务
+		/var/log/cups		记录打印信息
+		/var/log/dmesg		开机自检的信息
+		/var/log/btmp		错误登录信息
+			只能通过lastb查看
+		/var/log/lastlog	所有用户登录信息
+			只能通过lastlog命令查看
+		/var/log/messages	message事件
+		/var/log/mailog		邮件
+		/var/log/secure		授权日志
+		/var/log/wtmp		用户登录，注销，系统启动、关机
+			只能通过last命令查看
+		/var/log/utmp		用户登录信息
+			w,who,users命令查看
+	用源码包安装的服务的日志只会在安装的目录下
+14.2 rsyslogd日志服务
+	日志格式
+		时间
+		主机名
+		服务名
+		具体信息
+	/etc/rsyslog.conf配置文件
+		authpriv.*		/var/log/secure
+		服务名[链接符号]日志等级	日志位置
+		链接符号
+			.   大于等于
+			.=  等于
+			.!	不等于
+		等级
+			*	所有等级
+			debug info notice warning err 
+			crit	临界状态
+			alert	警告状态
+			emerg	疼痛等级
+		日志位置
+			打印机 /dev/lp0
+			发送给主机 @192.16810.210:514
+			用户名，如root，用户必须登录
+			不需要记录，~
+		*.info	/var/log/messages   所有服务记录到messages文件
+14.3 日志轮替
+	www.lamobrother.net		官网
+	一般一个每小时几万点击量的网站，一周100M左右
+	日志操作：切割、删除、轮换
+	httpd不支持删除操作
+	linux自带日志切割工具
+	日志命名规则
+		配置文件中带有dateext参数时，日志名-日期 ，例如：secure.20180505
+		不带时，最近的.1然后.2 。。。
+	/etc/logrotate配置文件
+		daily weekly monthly
+		rotate n    保留n个
+		compress	压缩
+		create mode owner group		设置备份日志权限，create 0600 root utmp
+		mail address 发送到address
+		missingok 	日志不存在时忽略日志警告信息
+		notifempty	为空时不轮替
+		minsize		轮替最小值
+		size		按大小轮替
+		datext		使用日期后缀
+		外部是全局配置，{}内是局部配置
+	只维护/var/log/下的日志文件
+	手工添加配置，处理源码包的日志
+		/usr/local/apache2/logs/access_log {
+			daily
+			create
+			rotate 30
+		}
+	logrotate命令
+		logrotate [选项] 配置文件名
+			-v 显示日志轮替过程
+			-f 强制进行日志轮替
+15 启动流程
+15.1 CentOS 6.3以上的启动管理
+15.1.1 运行级别
+	0 关机 1单用户（类似安全模式） 2不完全的命令行模式（不含NFS） 3完全的命令行模式（标准字符界面）
+	4系统保留 5图新模式 6重启动
+	init n   n级别号
+		init 0   关机
+		init 5	 切换到图形界面
+	runlevel	运行级别
+	修改默认运行级别
+		修改/etc/inittab文件
+		CentOS 7中：
+			systemctl set-default multi-user.target
+			systemctl set-default graphical.target
+15.1.2 系统启动过程
+	BIOS->MBR->GRUB启动引导程序->加载内核->内核自检（区别于BIOS自检）->initramfs->		
+		一些不常见的驱动写为函数模块放在/lib/下
+			对于IDE硬盘驱动在内核中，而SATA驱动不在内核中
+				initramfs系统（含SATA,USB,SCSI等驱动），在/boot/下，而/boot/是在GRUB中加载
+	/sbin/init->/etc/init/rcS.conf->/etc/rc.d/rc.sysinit初始化->
+		rc.sysinit 准备网络、磁盘等
+	/etc/inittab->/etc/rc[0-6].d->
+		按运行级别启动
+		会按里面的K或S脚本来关闭或启动服务
+	/etc/rc.d/rc.local->登录界面
+
+	
+
+
+
+
+
+
+
+
+
+
+
+		
+		
+		
+
+		
+
+
 end
 
 
